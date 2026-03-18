@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Statement {
+  id          String        @id @default(uuid())
+  fileName    String
+  score       Int
+  decision    String
+  createdAt   DateTime      @default(now())
+
+  transactions Transaction[]
+  feature      Feature?
+}
+
+model Transaction {
+  id          String   @id @default(uuid())
+  statementId String
+  date        String
+  description String
+  debit       Float?
+  credit      Float?
+  balance     Float
+  category    String
+
+  statement Statement @relation(fields: [statementId], references: [id])
+}
+
+model Feature {
+  statementId         String  @id
+  avgIncome           Float
+  totalDebit          Float
+  avgBalance          Float
+  negativeBalanceDays Int
+  bounceCount         Int
+
+  statement Statement @relation(fields: [statementId], references: [id])
+}

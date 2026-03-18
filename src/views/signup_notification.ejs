@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Alternative Credit Engine</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+        .btn { background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold; }
+        .otp { background: #f0f0f0; font-size: 24px; font-weight: bold; padding: 20px; text-align: center; border-radius: 10px; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Welcome, <%= firstName %>!</h1>
+        <p>Thanks for signing up with Alternative Credit Engine</p>
+    </div>
+    
+    <div class="content">
+        <h2>Verify Your Account</h2>
+        <p>Click the button below to verify your account and get started:</p>
+        <a href="<%= verifyUrl %>" class="btn">Verify Account</a>
+        
+        <p><strong>Or use this verification code:</strong></p>
+        <div class="otp"><%= verifyToken %></div>
+        
+        <p>This code expires in 10 minutes. If you didn't create this account, ignore this email.</p>
+        
+        <hr>
+        <p>Best regards,<br><strong>Alternative Credit Engine Team</strong></p>
+    </div>
+    
+    <div class="footer">
+        <p>© 2026 Alternative Credit Engine. All rights reserved.</p>
+    </div>
+</body>
+</html>
