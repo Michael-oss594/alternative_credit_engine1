@@ -20,7 +20,7 @@ app.set('view engine', 'ejs');
 
 // Home endpoint
 app.get("/", (req, res) => {
-  res.json({ message: "Welcome to Alternative Credit Engine API" });
+  res.send('Welcome to Alternative Credit Engine API');
 });
 
 app.get("/api", (req, res) => {
