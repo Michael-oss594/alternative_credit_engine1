@@ -25,7 +25,7 @@ function ruleBasedCategorize(transactions) {
     else if (desc.includes("pos") || desc.includes("purchase"))
       category = "pos_withdrawal";
     else if (desc.includes("atm")) category = "cash_withdrawal";
-    else if (desc.includes("swiggy") || desc.includes("zomato"))
+    else if (desc.includes("swiggy") || desc.includes("kfc"))
       category = "food_delivery";
 
     return { ...txn, category };
