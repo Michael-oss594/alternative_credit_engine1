@@ -5,7 +5,9 @@ const morgan = require("morgan");
 const fileUpload = require("express-fileupload");
 const pool = require("./src/services/db.js");
 const statementRoutes = require("./src/routes/statement.routes");
-const authRoutes = require("./src/routes/borrowersRoutes.js"); 
+const authRoutes = require("./src/routes/borrowersRoutes.js");
+const lenderRoutes = require("./src/routes/lendersRoutes.js");
+const identityRoutes = require("./src/routes/identityRoutes.js");
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -25,6 +27,8 @@ app.use("/api/statements", statementRoutes);
 app.use("/api/upload", statementRoutes);  
 app.use("/api/auth", authRoutes);       
 app.use("/api/borrowers", authRoutes);       
+app.use("/api/borrowers", identityRoutes);
+app.use("/api/lenders", lenderRoutes);
 
 // Home endpoint
 app.get("/api", (req, res) => {
