@@ -16,7 +16,7 @@ app.post('/v1/generate', (req, res) => {
     if (d.includes('salary')) category = 'salary';
     else if (d.includes('emi') || d.includes('loan')) category = 'loan_repayment';
     else if (d.includes('atm')) category = 'cash_withdrawal';
-    else if (d.includes('swiggy') || d.includes('zomato')) category = 'food_delivery';
+    else if (d.includes('swiggy') || d.includes('kfc')) category = 'food_delivery';
     else if (d.includes('rent')) category = 'rent';
     return { description: desc, category };
   });
