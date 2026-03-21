@@ -11,7 +11,12 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+app.use(cors({
+  origin: ['https://freshpee78.github.io', 'http://localhost:5500'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: false
+}));
 app.use(fileUpload());
 app.use(morgan("dev"));
 
@@ -37,6 +42,7 @@ app.use("/api/borrowers/identity", require("./src/routes/identityRoutes.js"));
 app.use("/api/lenders", require("./src/routes/lendersRoutes.js"));
 
 
+
 // Global error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -46,10 +52,28 @@ app.use((err, req, res, next) => {
 // Vercel serverless export
 module.exports = app;
 
-// Local development
+// Local development with graceful port handling
 if (require.main === module) {
   const port = process.env.PORT || 4000;
-  app.listen(port, () => {
+  const server = app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
+  });
+
+  // Graceful shutdown
+  process.on('SIGTERM', () => {
+    console.log('SIGTERM received, shutting down gracefully');
+    server.close(() => {
+      console.log('Process terminated');
+    });
+  });
+  
+  // Dynamic port if 4000 in use
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.log(`Port ${port} in use, trying ${port + 1}`);
+      app.listen(port + 1, () => {
+        console.log(`Server running on http://localhost:${port + 1}`);
+      });
+    }
   });
 }
