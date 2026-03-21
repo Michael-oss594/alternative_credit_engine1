@@ -40,6 +40,6 @@ console.log(`Lender login OTP: ${otp} for ${email}`);
 
   } catch (error) {
     console.error("Login error:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Internal Server error" });
   }
 };

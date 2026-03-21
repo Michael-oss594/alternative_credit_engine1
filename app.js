@@ -7,6 +7,7 @@ const fileUpload = require("express-fileupload");
 
 const app = express();
 
+
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -27,13 +28,14 @@ app.get("/api", (req, res) => {
   res.json({ message: "API ready. Use /api/upload for statements." });
 });
 
-// Lazy-loaded routes to optimize cold start
+// load routes 
 app.use("/api/statements", require("./src/routes/statement.routes"));
 app.use("/api/upload", require("./src/routes/statement.routes"));
 app.use("/api/auth", require("./src/routes/borrowersRoutes.js"));
 app.use("/api/borrowers", require("./src/routes/borrowersRoutes.js"));
 app.use("/api/borrowers/identity", require("./src/routes/identityRoutes.js"));
 app.use("/api/lenders", require("./src/routes/lendersRoutes.js"));
+
 
 // Global error handler
 app.use((err, req, res, next) => {

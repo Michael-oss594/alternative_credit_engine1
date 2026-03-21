@@ -37,6 +37,6 @@ exports.verifyIdentity = async (req, res) => {
 
   } catch (error) {
     console.error("Identity verification error:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Internal Server error" });
   }
 };

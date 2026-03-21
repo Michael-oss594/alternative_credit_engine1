@@ -90,11 +90,11 @@ exports.loginBorrower = async (req, res) => {
 
     await emailService.sendLoginNotification(email, otp);
 
-    res.status(200).json({ message: "Login OTP sent" });
+    res.status(200).json({ message: "Login OTP sent to your email. Please verify to complete login." });
 
   } catch (error) {
     console.error("Login error:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Internal Server error" });
   }
 };
 
@@ -162,11 +162,11 @@ exports.forgetPassword = async (req, res) => {
 
     await emailService.sendForgetPassword(email, otp);
 
-    res.status(200).json({ message: "Reset OTP sent" });
+    res.status(200).json({ message: "ForgetPassword Reset OTP sent" });
 
   } catch (error) {
     console.error("Forget password error:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Internal Server error" });
   }
 };
 
@@ -208,7 +208,7 @@ exports.resetPassword = async (req, res) => {
 
   } catch (error) {
     console.error("Reset password error:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Internal Server error" });
   }
 };
 
@@ -249,7 +249,7 @@ exports.verifyAccount = async (req, res) => {
 
   } catch (error) {
     console.error("Verify account error:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Internal Server error" });
   }
 };
 
