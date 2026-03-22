@@ -12,13 +12,11 @@ exports.signupBorrower = async (req, res) => {
       email,
       phone,
       password,
-      confirmPassword,
-      bvn,
-      nin
+      confirmPassword
     } = req.body;
 
     if (!first_name || !last_name || !email || !phone || !password || !confirmPassword) {
-      return res.status(400).json({ message: "All fields required, including confirmPassword" });
+      return res.status(400).json({ message: "All fields required" });
     }
 
     if (password !== confirmPassword) {
@@ -36,14 +34,14 @@ exports.signupBorrower = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    console.log('Creating borrower:', { first_name, email, phone }); // Debug
+    console.log('Creating borrower:', { first_name, email, phone }); 
 
     const queryConfig = {
       text: `INSERT INTO public.borrowers 
- (first_name, last_name, email, phone, password, bvn, nin)
- VALUES ($1,$2,$3,$4,$5,$6,$7)
- RETURNING id, first_name, last_name, email, phone, bvn, nin, created_at`,
-      values: [first_name, last_name, email, phone, hashedPassword, bvn || null, nin || null],
+ (first_name, last_name, email, phone, password, confirmPassword)
+ VALUES ($1,$2,$3,$4,$5,$6)
+ RETURNING id, first_name, last_name, email, phone, created_at`,
+      values: [first_name, last_name, email, phone, hashedPassword],
       rowMode: 'array'
     };
 
