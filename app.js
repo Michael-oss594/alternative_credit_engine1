@@ -14,7 +14,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors({
   origin: ['https://freshpee78.github.io', 'http://localhost:5500'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'application/json'],
   credentials: false
 }));
 app.use(fileUpload());
@@ -52,7 +52,7 @@ app.use((err, req, res, next) => {
 // Vercel serverless export
 module.exports = app;
 
-// Local development with graceful port handling
+// Local development port handling
 if (require.main === module) {
   const port = process.env.PORT || 4000;
   const server = app.listen(port, () => {
