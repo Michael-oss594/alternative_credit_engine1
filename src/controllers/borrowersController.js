@@ -34,30 +34,25 @@ exports.signupBorrower = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    console.log('Creating borrower:', { first_name, email, phone }); 
+    console.log("SIGNUP HIT:", req.body);
 
-    const queryConfig = {
-      text: `INSERT INTO public.borrowers 
- (first_name, last_name, email, phone, password, confirmPassword)
- VALUES ($1,$2,$3,$4,$5,$6)
- RETURNING id, first_name, last_name, email, phone, created_at`,
-      values: [first_name, last_name, email, phone, hashedPassword],
-      rowMode: 'array'
-    };
+    const result = await pool.query(
+      `INSERT INTO public.borrowers 
+      (first_name, last_name, email, phone, password)
+      VALUES ($1,$2,$3,$4,$5)
+      RETURNING id, first_name, last_name, email, phone, created_at`,
+      [first_name, last_name, email, phone, hashedPassword]
+    );
 
-    const result = await pool.query(queryConfig);
-
-    console.log('Borrower created:', result.rows[0]);
-
-    const borrower = result.rows[0];
+    console.log("INSERTED:", result.rows[0]);
 
     res.status(201).json({
       message: "Borrower created successfully.",
-      borrower
+      borrower: result.rows[0]
     });
 
   } catch (error) {
-    console.error(error);
+    console.error("SIGNUP ERROR:", error);
     res.status(500).json({ error: error.message });
   }
 };
