@@ -171,9 +171,9 @@ exports.forgetPassword = async (req, res) => {
 
 exports.resetPassword = async (req, res) => {
   try {
-    const { email, otp, newPassword, confirmNewPassword } = req.body;
+    const { email, otp, newPassword } = req.body;
 
-    if (!email || !otp || !newPassword || !confirmNewPassword) {
+    if (!email || !otp || !newPassword) {
       return res.status(400).json({ message: "All fields required" });
     }
 
@@ -194,11 +194,10 @@ exports.resetPassword = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    const hashedConfirmPassword = await bcrypt.hash(confirmNewPassword, 10);
-
+    
     await pool.query(
       "UPDATE public.borrowers SET password = $1, confirm_password = $2, otp = NULL, otp_expires_at = NULL WHERE email = $3",
-      [hashedPassword, hashedConfirmPassword, email]
+      [hashedPassword, email]
     );
 
     await emailService.sendResetPassword(email, borrower.first_name);
