@@ -177,11 +177,10 @@ exports.resetPassword = async (req, res) => {
       return res.status(400).json({ message: "All fields required" });
     }
 
-    if (newPassword !== confirmNewPassword) {
-      return res.status(400).json({ message: "Passwords do not match" });
-    }
-
-    const result = await pool.query("SELECT * FROM public.borrowers WHERE email = $1", [email]);
+    const result = await pool.query(
+      "SELECT * FROM public.borrowers WHERE email = $1",
+      [email]
+    );
 
     if (result.rows.length === 0) {
       return res.status(401).json({ message: "Invalid credentials" });
@@ -189,14 +188,18 @@ exports.resetPassword = async (req, res) => {
 
     const borrower = result.rows[0];
 
-    if (borrower.otp !== otp || new Date() > new Date(borrower.otp_expires_at)) {
+    // safer OTP comparison
+    if (
+      String(borrower.otp) !== String(otp) ||
+      new Date() > new Date(borrower.otp_expires_at)
+    ) {
       return res.status(401).json({ message: "Invalid OTP" });
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    
+
     await pool.query(
-      "UPDATE public.borrowers SET password = $1, confirm_password = $2, otp = NULL, otp_expires_at = NULL WHERE email = $3",
+      "UPDATE public.borrowers SET password = $1, otp = NULL, otp_expires_at = NULL WHERE email = $2",
       [hashedPassword, email]
     );
 
@@ -205,7 +208,7 @@ exports.resetPassword = async (req, res) => {
     res.status(200).json({ message: "Password reset successful" });
 
   } catch (error) {
-    console.error("Reset password error:", error);
+    console.error("Reset password error:", error.message);
     res.status(500).json({ message: "Internal Server error" });
   }
 };
