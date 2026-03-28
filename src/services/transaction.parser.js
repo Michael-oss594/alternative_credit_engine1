@@ -372,95 +372,119 @@ function parseOPayTransactions(lines) {
   const transactions = [];
 
   const amountRegex = /[\d,]+\.\d{2}/g;
-  const dateRegex = /(\d{1,2} [A-Za-z]{3} \d{4})/;
+  const dateRegex =
+    /(\d{1,2} [A-Za-z]{3} \d{4}|\d{1,2}\/\d{1,2}\/\d{4}|\d{4}-\d{2}-\d{2})/;
 
-  let buffer = [];
+  function cleanAmount(str) {
+    return parseFloat(str.replace(/,/g, ""));
+  }
 
-  function flushBuffer() {
-    if (!buffer.length) return;
+  function normalizeLine(line) {
+    return line
+      .replace(/\s+/g, " ")
+      .replace(/[^\x20-\x7E]/g, "") 
+      .trim();
+  }
 
-    const joined = buffer.join(" ");
-    const lower = joined.toLowerCase();
+  function isNoise(line) {
+    return (
+      !line ||
+      /^(Trans\. Time|Generated on|Account Statement|O$)/i.test(line) ||
+      /OPay|Licensed|www\.opayweb\.com/i.test(line)
+    );
+  }
 
-    const dateMatch = joined.match(dateRegex);
-    if (!dateMatch) {
-      buffer = [];
-      return;
+  function detectType(text) {
+    const lower = text.toLowerCase();
+
+    if (/(received|deposit|transfer from|\bcr\b)/i.test(lower)) return "credit";
+    if (/(sent|send|withdraw|payment|pos|airtime|bet|\bdr\b|transfer to)/i.test(lower)) return "debit";
+
+    return "unknown";
+  }
+
+  // CORE: SMART TRANSACTION SPLITTER
+  function splitTransactions(lines) {
+    const chunks = [];
+    let current = [];
+
+    for (let line of lines) {
+      line = normalizeLine(line);
+      if (isNoise(line)) continue;
+
+      const hasDate = dateRegex.test(line);
+      const hasAmount = amountRegex.test(line);
+
+      // start new transaction only if meaningful
+      if (hasDate && hasAmount && current.length) {
+        chunks.push(current);
+        current = [line];
+      } else {
+        current.push(line);
+      }
     }
+
+    if (current.length) chunks.push(current);
+
+    return chunks;
+  }
+
+  // FIELD EXTRACTION ENGINE
+  function extractTransaction(chunk) {
+    const text = chunk.join(" ");
+    const lower = text.toLowerCase();
+
+    const dateMatch = text.match(dateRegex);
+    if (!dateMatch) return null;
 
     const date = dateMatch[1];
 
-    // extract amounts
-    const amounts = [...joined.matchAll(amountRegex)].map(m =>
-      parseFloat(cleanAmount(m[0]))
+    const amounts = [...text.matchAll(amountRegex)].map(m =>
+      cleanAmount(m[0])
     );
 
-    if (!amounts.length) {
-      buffer = [];
-      return;
-    }
+    if (!amounts.length) return null;
 
     let debit = 0;
     let credit = 0;
     let balance = 0;
 
+    // structured assumption
     if (amounts.length >= 3) {
-      const a = amounts[0];
-      const b = amounts[1];
-      const c = amounts[2];
+      const sorted = [...amounts].sort((a, b) => b - a);
+      balance = sorted[0];
 
-      balance = c || 0;
+      const others = amounts.filter(a => a !== balance);
+      const type = detectType(text);
 
-      if (
-        lower.includes("received") ||
-        lower.includes("transfer from") ||
-        lower.includes("deposit")
-      ) {
-        credit = a;
-        debit = b;
-      } else if (
-        lower.includes("send") ||
-        lower.includes("sent") ||
-        lower.includes("withdraw") ||
-        lower.includes("payment") ||
-        lower.includes("airtime") ||
-        lower.includes("bet") ||
-        lower.includes("pos")
-      ) {
-        debit = a;
-        credit = b;
+      if (type === "debit") {
+        debit = others[0] || 0;
       } else {
-        credit = a;
-        debit = b;
+        credit = others[0] || 0;
       }
 
-    } else if (amounts.length >= 1) {
+    } else if (amounts.length === 2) {
+      const [a, b] = amounts;
+
+      // assume one is balance (usually larger)
+      if (b > a) {
+        balance = b;
+        if (detectType(text) === "debit") debit = a;
+        else credit = a;
+      } else {
+        balance = a;
+        if (detectType(text) === "debit") debit = b;
+        else credit = b;
+      }
+
+    } else {
       const amt = amounts[0];
-
-      if (
-        lower.includes("send") ||
-        lower.includes("sent") ||
-        lower.includes("withdraw") ||
-        lower.includes("payment") ||
-        lower.includes("airtime") ||
-        lower.includes("bet") ||
-        lower.includes("pos")
-      ) {
-        debit = amt;
-
-      } else if (
-        lower.includes("received") ||
-        lower.includes("transfer from") ||
-        lower.includes("deposit")
-      ) {
-        credit = amt;
-
-      } else {
-        credit = amt;
-      }
+      if (detectType(text) === "debit") debit = amt;
+      else credit = amt;
     }
 
-    let description = joined
+    // DESCRIPTION
+    let description = text
       .replace(dateRegex, "")
       .replace(amountRegex, "")
       .replace(/\b\d{10,}\b/g, "")
@@ -470,41 +494,58 @@ function parseOPayTransactions(lines) {
 
     if (!description) description = "Transaction";
 
-    transactions.push({
+    return {
       date,
       description,
       debit,
       credit,
       balance,
-    });
-
-    buffer = [];
+    };
   }
 
-  for (const line of lines) {
-    const clean = line.trim();
+  // FALLBACK (when parsing fails)
+  function fallbackParse(chunk) {
+    const text = chunk.join(" ");
+    const amounts = [...text.matchAll(amountRegex)].map(m =>
+      cleanAmount(m[0])
+    );
 
-    if (
-      !clean ||
-      /^(Trans\. Time|Generated on|Account Statement|O$)/i.test(clean) ||
-      /OPay|www\.opayweb\.com|Licensed/i.test(clean)
-    ) continue;
+    if (!amounts.length) return null;
 
-    if (dateRegex.test(clean)) {
-      flushBuffer();
-      buffer.push(clean);
-    } else {
-      buffer.push(clean);
+    return {
+      date: "UNKNOWN",
+      description: text.slice(0, 100),
+      debit: 0,
+      credit: amounts[0],
+      balance: amounts[amounts.length - 1] || 0,
+    };
+  }
+
+  // EXECUTION PIPELINE
+  const chunks = splitTransactions(lines);
+
+  for (const chunk of chunks) {
+    let tx = extractTransaction(chunk);
+
+    if (!tx) {
+      tx = fallbackParse(chunk);
     }
+
+    if (tx) transactions.push(tx);
   }
 
-  flushBuffer();
-  console.log({
-  totalCredit: transactions.reduce((s, t) => s + t.credit, 0),
-  totalDebit: transactions.reduce((s, t) => s + t.debit, 0),
-});
+  // FINAL VALIDATION
+  const cleaned = transactions.filter(
+    t => t.credit !== 0 || t.debit !== 0
+  );
 
-  return transactions;
+  console.log({
+    totalCredit: cleaned.reduce((s, t) => s + t.credit, 0),
+    totalDebit: cleaned.reduce((s, t) => s + t.debit, 0),
+    count: cleaned.length,
+  });
+
+  return cleaned;
 }
 
 function parsePalmPayTransactions(lines) {
@@ -519,8 +560,8 @@ function parsePalmPayTransactions(lines) {
     if (!buffer.length) return;
 
     const joined = buffer.join(" ");
-
-    const dateMatch = joined.match(dateRegex);
+ 
+    const dateMatch = joined.match(dateRegex); 
     if (!dateMatch) {
       buffer = [];
       return;

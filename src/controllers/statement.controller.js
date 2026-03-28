@@ -20,7 +20,7 @@ exports.processStatement = async (req, res) => {
 
     const file = req.files[Object.keys(req.files)[0]];
 
-    // 👇 use buffer instead of saving file
+    // buffer is use instead of saving file
     const fileBuffer = file.data;
 
     const statementId = uuidv4();
