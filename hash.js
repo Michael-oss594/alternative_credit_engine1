@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt");
 
-const password = "mikky12345";
+const password = "TESTlender123!";
 
 async function hashPassword() {
   const saltRounds = 10;
