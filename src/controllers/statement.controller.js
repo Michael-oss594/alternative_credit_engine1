@@ -6,6 +6,8 @@ const { parseTransactions, extractMetadata } = require("../services/transaction.
 const { categorizeTransactions } = require("../services/categorizer.service");
 const { generateFeatures } = require("../services/feature.service");
 const { scoreApplicant } = require("../services/scoring.service");
+const cloudinary = require("../config/cloudinary");
+const prisma = require("../config/prisma");
 
 const { v4: uuidv4 } = require("uuid");
 
@@ -20,12 +22,26 @@ exports.processStatement = async (req, res) => {
 
     const file = req.files[Object.keys(req.files)[0]];
 
-    // buffer is use instead of saving file
-    const fileBuffer = file.data;
+    // Upload PDF to Cloudinary
+    const uploadResult = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          resource_type: 'raw',
+          public_id: `statements/${uuidv4()}`,
+          format: 'pdf'
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      stream.end(file.data);
+    });
 
-    const statementId = uuidv4();
+    const fileUrl = uploadResult.secure_url;
 
-    const text = await extractTextFromPDF(fileBuffer);
+    // Extract text from buffer for processing
+    const text = await extractTextFromPDF(file.data);
 
     if (!text || text.length < 50) {
       throw new Error("Failed to extract text from PDF");
@@ -49,9 +65,52 @@ exports.processStatement = async (req, res) => {
     const features = generateFeatures(categorizedTransactions);
     const scoring = scoreApplicant(features);
 
+    // Save statement to database
+    const statementId = uuidv4();
+    const statement = await prisma.statement.create({
+      data: {
+        id: statementId,
+        fileName: file.name,
+        fileUrl: fileUrl,
+        score: scoring.score,
+        decision: scoring.decision,
+        transactions: {
+          create: transactions.map(t => ({
+            date: t.date,
+            description: t.description,
+            debit: t.debit,
+            credit: t.credit,
+            balance: t.balance,
+            category: t.category || 'others'
+          }))
+        },
+        feature: {
+          create: {
+            statementId: statementId,
+            avgIncome: features.avgIncome || 0,
+            totalDebit: features.totalDebit || 0,
+            avgBalance: features.avgBalance || 0,
+            negativeBalanceDays: features.negativeBalanceDays || 0,
+            bounceCount: features.bounceCount || 0
+          }
+        }
+      },
+      include: {
+        transactions: true,
+        feature: true
+      }
+    });
+
     return res.status(200).json({
       success: true,
-      scoring
+      scoring,
+      statement: {
+        id: statement.id,
+        fileName: statement.fileName,
+        fileUrl: statement.fileUrl,
+        score: statement.score,
+        decision: statement.decision
+      }
     });
 
   } catch (error) {

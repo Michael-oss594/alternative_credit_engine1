@@ -13,7 +13,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({
   origin: [
-    "https://freshpee78.github.io",
+    "https://ezworld325.github.io/credd/",
+    "https://github.com/Freshpee78/credd",
     "http://localhost:5500"
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
