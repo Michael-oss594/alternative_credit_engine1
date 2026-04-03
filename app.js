@@ -4,6 +4,7 @@ const cors = require("cors");
 const path = require("path");
 const morgan = require("morgan");
 const fileUpload = require("express-fileupload");
+const prisma = require("./src/config/prisma");
 
 const app = express();
 
@@ -63,13 +64,35 @@ if (require.main === module) {
     console.log(`Server running on http://localhost:${port}`);
   });
 
-  // Graceful shutdown
-  process.on('SIGTERM', () => {
-    console.log('SIGTERM received, shutting down gracefully');
-    server.close(() => {
-      console.log('Process terminated');
-    });
+  // Enhanced error handler for unhandled exceptions
+  process.on("uncaughtException", (err) => {
+    console.error("Uncaught Exception:", err);
+    process.exit(1);
   });
+
+  process.on("unhandledRejection", (reason, promise) => {
+    console.error("Unhandled Rejection at:", promise, "reason:", reason);
+    process.exit(1);
+  });
+
+  // Graceful shutdown
+  const gracefulShutdown = async () => {
+    console.log("Shutting down gracefully...");
+    server.close(async () => {
+      await prisma.$disconnect();
+      console.log("Database disconnected");
+      process.exit(0);
+    });
+
+    // Force exit after 10 seconds
+    setTimeout(() => {
+      console.error("Forced shutdown after timeout");
+      process.exit(1);
+    }, 10000);
+  };
+
+  process.on('SIGTERM', gracefulShutdown);
+  process.on('SIGINT', gracefulShutdown);
   
   // Dynamic port if 4000 in use
   server.on('error', (err) => {
