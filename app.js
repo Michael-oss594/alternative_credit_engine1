@@ -13,7 +13,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({
   origin: [
-    "https://ezworld325.github.io/credd/",
+    "https://ezworld325.github.io/credd",
     "https://github.com/Freshpee78/credd",
     "http://localhost:5500"
   ],
@@ -21,7 +21,7 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: false
 }));
-app.use(fileUpload());
+//app.use(fileUpload());
 app.use(morgan("dev"));
 
 // View engine
