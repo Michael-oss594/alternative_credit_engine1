@@ -6,7 +6,7 @@
     "dev": "nodemon app.js",
     "start": "node app.js",
     "postinstall": "prisma generate",
-    "vercel-build": "prisma generate && prisma migrate deploy"
+    "vercel-build": "prisma generate"
   },
   "keywords": [],
   "author": "",
