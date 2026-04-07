@@ -22,7 +22,7 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: false
 }));
-//app.use(fileUpload());
+app.use(fileUpload());
 app.use(morgan("dev"));
 
 // View engine
@@ -54,7 +54,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ success: false, error: 'Something went wrong!' });
 });
 
-// Vercel serverless export
+// Vercel serverless
 module.exports = app;
 
 // Local development port handling
