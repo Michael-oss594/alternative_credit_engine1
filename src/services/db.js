@@ -1,5 +1,10 @@
 const { Pool } = require("pg");
 
+// Ensure dotenv is loaded before using environment variables
+if (!process.env.DATABASE_URL) {
+  require("dotenv").config();
+}
+
 // Remove channel_binding parameter if present - it can cause issues with some drivers
 const dbUrl = new URL(process.env.DATABASE_URL);
 dbUrl.searchParams.delete("channel_binding");
