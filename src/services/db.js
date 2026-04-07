@@ -1,14 +1,25 @@
 const { Pool } = require("pg");
 
-// Ensure dotenv is loaded before using environment variables
+// Load environment variables
+require("dotenv").config();
+
+// Log to debug
+console.log("DATABASE_URL exists:", !!process.env.DATABASE_URL);
+console.log("DATABASE_URL:", process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 50) + "..." : "NOT SET");
+
+// Validate DATABASE_URL exists
 if (!process.env.DATABASE_URL) {
-  require("dotenv").config();
+  console.error("ERROR: DATABASE_URL environment variable is not set!");
+  process.exit(1);
 }
 
 // Remove channel_binding parameter if present - it can cause issues with some drivers
 const dbUrl = new URL(process.env.DATABASE_URL);
 dbUrl.searchParams.delete("channel_binding");
 const cleanConnectionString = dbUrl.toString();
+
+console.log("Connecting to database...");
+console.log("Connection string:", cleanConnectionString.substring(0, 50) + "...");
 
 console.log("Connecting to database...");
 

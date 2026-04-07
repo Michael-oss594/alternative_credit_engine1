@@ -1,7 +1,10 @@
-// Ensure dotenv is loaded before using environment variables
-if (!process.env.CLOUDINARY_CLOUD_NAME) {
-  require("dotenv").config();
-}
+// Load environment variables FIRST
+require("dotenv").config();
+
+// Log to debug
+console.log("CLOUDINARY_CLOUD_NAME:", process.env.CLOUDINARY_CLOUD_NAME || "NOT SET");
+console.log("CLOUDINARY_API_KEY:", process.env.CLOUDINARY_API_KEY ? "✓ Set" : "✗ NOT SET");
+console.log("CLOUDINARY_API_SECRET:", process.env.CLOUDINARY_API_SECRET ? "✓ Set" : "✗ NOT SET");
 
 const cloudinary = require('cloudinary').v2;
 
@@ -12,8 +15,6 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Log to verify config loaded
 console.log("Cloudinary configured with cloud_name:", process.env.CLOUDINARY_CLOUD_NAME);
-console.log("Cloudinary API Key:", process.env.CLOUDINARY_API_KEY ? "✓ Loaded" : "✗ Missing");
 
 module.exports = cloudinary;
