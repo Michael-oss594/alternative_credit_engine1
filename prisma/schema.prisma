@@ -46,3 +46,35 @@ model Feature {
 
   statement Statement @relation(fields: [statementId], references: [id])
 }
+
+model Borrower {
+  id        Int     @id @default(autoincrement()) @map("id")
+  firstName String  @map("first_name")
+  lastName  String  @map("last_name")
+  email     String  @unique @map("email")
+  phone     String  @map("phone")
+  password  String  @map("password")
+  otp       String? @map("otp")
+  otpExpiresAt DateTime? @map("otp_expires_at")
+  verified  Boolean? @default(false) @map("verified")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  identities BorrowerIdentity[]
+
+  @@map("borrowers")
+}
+
+model BorrowerIdentity {
+  id                Int     @id @default(autoincrement()) @map("id")
+  borrowerId        Int     @map("borrower_id")
+  bvnNin            String  @map("bvn_nin")
+  dob               DateTime @map("dob")
+  mothersMaidenName String  @map("mothers_maiden_name")
+  verified          Boolean @default(false) @map("verified")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  borrower Borrower @relation(fields: [borrowerId], references: [id], onDelete: Cascade)
+
+  @@map("borrower_identities")
+  @@index([borrowerId])
+}
