@@ -72,8 +72,8 @@ exports.processStatement = async (req, res) => {
         id: statementId,
         fileName: file.name,
         fileUrl: fileUrl,
-        score: scoring.score,
-        decision: scoring.decision,
+        score: scoring.credit_score,
+        decision: scoring.loan_recommendation,
         transactions: {
           create: transactions.map(t => ({
             date: t.date,
