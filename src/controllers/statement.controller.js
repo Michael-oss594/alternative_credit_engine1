@@ -76,11 +76,11 @@ exports.processStatement = async (req, res) => {
         decision: scoring.loan_recommendation,
         transactions: {
           create: transactions.map(t => ({
-            date: t.date,
+            transactionDate: t.date,
+            transactionReference: t.reference || '',
             description: t.description,
-            debit: t.debit,
-            credit: t.credit,
-            balance: t.balance,
+            debit: t.debit || 0,
+            credit: t.credit || 0,
             category: t.category || 'others'
           }))
         },

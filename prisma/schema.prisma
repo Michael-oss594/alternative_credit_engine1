@@ -8,37 +8,41 @@ datasource db {
 }
 
 model Statement {
-  id          String        @id @default(uuid())
-  fileName    String
-  fileUrl     String?       // Cloudinary URL for the uploaded PDF
-  score       Int
-  decision    String
-  createdAt   DateTime      @default(now())
+  id                    String   @id @default(uuid())
+  borrowerId            String?
+  accountNumber         String?
+  fileName              String?
+  fileUrl               String?
+  score                 Int?
+  decision              String?
+  createdAt             DateTime @default(now())
 
-  transactions Transaction[]
-  feature      Feature?
+  transactions   Transaction[]
+  feature        Feature?
 }
 
 model Transaction {
-  id          String   @id @default(uuid())
-  statementId String
-  date        String
-  description String
-  debit       Float?
-  credit      Float?
-  balance     Float
-  category    String
+  id                   String   @id @default(uuid())
+  statementId          String
+  borrowerId           String?
+  accountNumber        String?
+  transactionDate      String
+  transactionReference String?
+  description          String
+  debit                Float?
+  credit               Float?
+  category             String?
 
   statement Statement @relation(fields: [statementId], references: [id])
 }
 
 model Feature {
-  statementId         String  @id
-  avgIncome           Float
-  totalDebit          Float
-  avgBalance          Float
-  negativeBalanceDays Int
-  bounceCount         Int
+  statementId         String   @id
+  avgIncome           Float?
+  totalDebit          Float?
+  avgBalance          Float?
+  negativeBalanceDays Int?
+  bounceCount         Int?
 
   statement Statement @relation(fields: [statementId], references: [id])
 }
