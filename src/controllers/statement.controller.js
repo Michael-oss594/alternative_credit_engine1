@@ -86,7 +86,6 @@ exports.processStatement = async (req, res) => {
         },
         feature: {
           create: {
-            statementId: statementId,
             avgIncome: features.avgIncome || 0,
             totalDebit: features.totalDebit || 0,
             avgBalance: features.avgBalance || 0,
