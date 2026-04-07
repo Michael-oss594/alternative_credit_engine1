@@ -15,11 +15,11 @@ const pool = new Pool({
   },
 
   // Neon can take longer to establish initial connections
-  connectionTimeoutMillis: 30000, // 30 seconds for initial connection
-  idleTimeoutMillis: 240000, // 4 minutes
-  statementTimeoutMillis: 30000, // 30 seconds per query
+  connectionTimeoutMillis: 30000, 
+  idleTimeoutMillis: 240000, 
+  statementTimeoutMillis: 30000, 
   max: 10,
-  min: 0, // Don't keep idle connections if not needed
+  min: 0, 
   allowExitOnIdle: false,
 });
 
@@ -46,7 +46,7 @@ const testConnection = async () => {
     const client = await pool.connect();
     const result = await client.query("SELECT NOW()");
     client.release();
-    console.log("✓ Database connected successfully at", result.rows[0].now);
+    console.log("Database connected successfully at", result.rows[0].now);
     return true;
   } catch (err) {
     retryCount++;
