@@ -138,8 +138,8 @@ exports.verifyOtpLoginBorrower = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("OTP verification error:", error);
-    res.status(500).json({ message: "Server error" });
+    console.error("OTP verification error:", error.message, error.stack);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
