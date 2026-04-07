@@ -40,7 +40,7 @@ app.get("/api", (req, res) => {
 
 // load routes 
 app.use("/api/statements", require("./src/routes/statement.routes"));
-app.use("/api/upload", require("./src/routes/statement.routes"));
+//app.use("/api/upload", require("./src/routes/statement.routes"));
 app.use("/api/auth", require("./src/routes/borrowersRoutes.js"));
 app.use("/api/borrowers", require("./src/routes/borrowersRoutes.js"));
 app.use("/api/borrowers/identity", require("./src/routes/identityRoutes.js"));

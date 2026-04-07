@@ -1,38 +1,71 @@
 const { Pool } = require("pg");
 
+// Remove channel_binding parameter if present - it can cause issues with some drivers
+const dbUrl = new URL(process.env.DATABASE_URL);
+dbUrl.searchParams.delete("channel_binding");
+const cleanConnectionString = dbUrl.toString();
+
+console.log("Connecting to database...");
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: cleanConnectionString,
 
   ssl: {
     rejectUnauthorized: false, 
   },
 
-  connectionTimeoutMillis: 10000,
-  idleTimeoutMillis: 30000,
-  max: 20,
-  min: 2,
+  // Neon can take longer to establish initial connections
+  connectionTimeoutMillis: 30000, // 30 seconds for initial connection
+  idleTimeoutMillis: 240000, // 4 minutes
+  statementTimeoutMillis: 30000, // 30 seconds per query
+  max: 10,
+  min: 0, // Don't keep idle connections if not needed
+  allowExitOnIdle: false,
 });
 
-// Handle pool connection
+// Event handlers
 pool.on("connect", () => {
-  console.log("DB Connected");
+  console.log("New DB connection established");
 });
 
-// Handle pool errors
-pool.on("error", (err, client) => {
-  console.error("Unexpected error on idle client", err);
-  process.exit(-1);
+pool.on("error", (err) => {
+  console.error("Pool error:", err.message);
 });
 
-// Test initial connection
-pool.connect()
-  .then((client) => {
-    console.log("DB Connected Successfully");
+pool.on("remove", () => {
+  console.log("Connection removed from pool");
+});
+
+// Test connection with retry logic
+let retryCount = 0;
+const maxRetries = 3;
+
+const testConnection = async () => {
+  try {
+    console.log(`Attempting database connection (attempt ${retryCount + 1}/${maxRetries + 1})...`);
+    const client = await pool.connect();
+    const result = await client.query("SELECT NOW()");
     client.release();
-  })
-  .catch(err => {
-    console.error("DB Connection Error:", err.message);
-    process.exit(1);
-  });
+    console.log("✓ Database connected successfully at", result.rows[0].now);
+    return true;
+  } catch (err) {
+    retryCount++;
+    console.error(`Connection attempt ${retryCount} failed:`, err.message);
+    
+    if (retryCount <= maxRetries) {
+      console.log(`Retrying in 3 seconds... (${retryCount}/${maxRetries})`);
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      return testConnection();
+    }
+    
+    console.error("✗ Failed to connect to database after", maxRetries + 1, "attempts");
+    return false;
+  }
+};
+
+// Run connection test
+testConnection().catch(err => {
+  console.error("Connection test error:", err);
+});
 
 module.exports = pool;
