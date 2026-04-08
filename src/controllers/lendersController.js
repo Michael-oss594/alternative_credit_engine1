@@ -2,6 +2,7 @@ const pool = require("../services/db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const { sendOtpEmail } = require("../services/email.service");
 
 exports.loginLender = async (req, res) => {
   try {
@@ -33,9 +34,16 @@ exports.loginLender = async (req, res) => {
       [otp, expiresAt, email]
     );
 
+    try {
+      await sendOtpEmail(email, otp);
+    } catch (emailError) {
+      console.error("Failed to send OTP email:", emailError);
+      return res.status(500).json({ message: "Failed to send OTP email" });
+    }
+
     console.log(`Lender login OTP: ${otp} for ${email}`);
 
-    res.status(200).json({ message: "Login OTP sent" });
+    res.status(200).json({ message: "Login OTP sent to email" });
 
   } catch (error) {
     console.error("Login error:", error);

@@ -78,3 +78,16 @@ model BorrowerIdentity {
   @@map("borrower_identities")
   @@index([borrowerId])
 }
+
+model Lender {
+  id               Int     @id @default(autoincrement()) @map("id")
+  email            String  @unique @map("email")
+  password         String  @map("password")
+  otp              String? @map("otp")
+  otpExpiresAt     DateTime? @map("otp_expires_at")
+  verified         Boolean @default(false) @map("verified")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@map("lenders")
+  @@index([email])
+}

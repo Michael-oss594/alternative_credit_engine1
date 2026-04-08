@@ -31,3 +31,17 @@ CREATE TABLE IF NOT EXISTS public.borrower_identities (
 
 -- Create index for borrower_identities
 CREATE INDEX IF NOT EXISTS idx_borrower_identities_borrower_id ON public.borrower_identities (borrower_id);
+
+-- Migration to create lenders table for login API with hashed password storage
+CREATE TABLE IF NOT EXISTS public.lenders (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  otp VARCHAR(4),
+  otp_expires_at TIMESTAMP,
+  verified BOOLEAN DEFAULT false,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create index for lenders email
+CREATE INDEX IF NOT EXISTS idx_lenders_email ON public.lenders (email);
